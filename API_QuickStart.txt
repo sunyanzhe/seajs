@@ -1,0 +1,88 @@
+1.seajs.config
+    用来对Sea.js进行配置
+    seajs.config({
+        //设置路径,方便跨目录调用
+        path:{
+            'arale':'https://a.alipayobjects.com/arale',
+            'jquery':'https://a.alipaobjects.com/jquery'
+        },
+        //设置别名,方便调用
+        alias:{
+            'class':'arale/class/1.0.0/class',
+            'jquery':'jquery/jquery/1.10.1/jquery'
+        }
+    })
+
+2.seajs.use();
+    用来在页面中加载一个或多个模块,
+    
+    //加载一个模块
+    seajs.use('./a');
+
+    //加载一个模块,在加载完成时,执行回调
+    seajs.use('./a',fucntion(a){
+        a.doSomething();
+    })
+
+    //加载多个模块,在加载完成时,执行回调
+    sea.use(['./a','./b'],function(a,b){
+        a.doSomething();
+        b.doSomething();
+    })
+
+3.define
+    用来定义模块.Sea.js推崇一个模块一个文件,遵循同一的写法:
+    defin(function(require,exports,module){
+        //模块代码
+    })    
+
+    也可以手动指定模块id和依赖
+    require,exports和module三个参数可酌情省略,具体用法如下.
+
+4.require
+    require用来获取指定模块的接口
+    define(function(require){
+        
+        //获取模块a的接口
+        var a=require('./a');
+        //调用模块a的方法
+        a.doSomething();
+    });
+    //注意,require只接受字符串直接量作为参数.
+
+5.require.async
+    用来在模块内部异步加载一个或多个模块
+    define(function(require){
+
+        //异步加载一个模块,在加载完成时,执行回调
+        require.async('./b',function(b){
+            b.doSomething()
+        });
+
+        //异步加载多个模块,在加载完成时,执行回调
+        require.async(['./c','./d'],function(c,d){
+            c.doSomething();
+            d.doSomething();
+        })
+    })
+
+6.exports
+    用来在模块内部对外提供接口
+    define(function(require,exports){
+        //对外提供foo属性
+        exports.foo='bar';
+
+        //对外提供doSomething方法
+        exports.doSomething=function(){};
+    })
+
+7.module.exports 
+    与exports类似,用来在模块内部对外提供接口
+    define(function(require,exports,module){
+        module.exports={
+            name:'a',
+            doSomething:function(){}
+        }
+    })
+                
+以上7个接口最为常用,牢记于心
