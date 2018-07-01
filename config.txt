@@ -1,0 +1,185 @@
+seajs.config seajs.config(options)
+
+用来进行配置的方法
+seajs.config({
+    //别名配置
+    alias:{
+        'es5-safe':'gallery/es5-safe/0.9.3/es5-safe',
+        'json':'gallery/json/1.0.2/json',
+        'jquery':'jquery/jquery/1.10.1/jquery'
+    },
+
+    //路径配置
+    path:{
+        'gallery':'http://a.alipayobjects.com/gallery'
+    },
+
+    //变量配置
+    vars:{
+        'local':'zh-cn'
+    },
+
+    //映射配置
+    map:[
+        ['http://example.com/js/app','http://localhost/js/app']
+    ],
+
+    //预加载项
+    preload:[
+        Function.prototype.bind ? '':'es5-safe',
+        this.JSON ? '' : 'json'
+    ],
+
+    //调试模式
+    debug:true,
+
+    //Sea.js的基础路径
+    base:'http://example.com/path/to/base/',
+
+    //文件编码
+    charset:'utf-8'
+});
+
+    1.alais [Object]
+    当模块标识很长时,可以使用alias来简化.
+    seajs.config({
+        alias:{
+            'jquery':'jquery/jquery/1.10.1/jquery',
+            'app/biz':'http://path/to/app/biz.js'
+        }
+    });
+
+    define(function(require,exports,module){
+        var $=require('jquery');        =>加载的是 http://path/to/base/jquery/jquery/1.10.1/jquery.js
+        var biz=require('app/biz');     =>加载的是 http://path/to/app/biz.js
+    });
+    使用alias,可以让文件的真实路径与调用标识分开,有利于统一维护.
+
+    2.paths [Object]
+    当目录比较深,或需要跨目录调用模块时,可以使用paths来简化书写
+    seajs.config({
+        paths:{
+            'gallery':'https:a.alipayobjects.com/gallery',
+            'app':'path/to/app'
+        }
+    })
+
+    define(function(require,exports,module){
+        var underscore=require('gallery/undeiscore');       => 加载的是 https://a.alipayobjects.com/gallery/underscore.js
+        var biz=requrie('app/biz')                          => 加载的是 path/to/app/biz.js
+    })
+
+    paths配置可以结合alias配置一起使用,让模块引用非常方便
+
+    3.vars [Object]
+    有些场景下,模块路径在运行时才能确定,这时可以使用vars变量来配置
+    seajs.config({
+        vars:{
+            'local':'zh-cn'
+        }
+    });
+
+    define(function(require,exports,module){
+        var lang=require('./i18n/{local}.js');  //=> 加载的是 path/to/i18n/zh-cn.js
+    })
+
+    vars 配置的是模块标识中的变量值,在模块表示中用{key}来表示变量
+
+    4.map Array
+    该配置可以对模块路径进行映射修改,可用于路径转换、在线调试等.
+    seajs.config({
+        map:[
+            ['js','-debug.js']
+        ]
+    })
+
+    define(function(require,exports,module){
+        var a=require('./a');          => 加载的是 path/to/a-debug.js
+    })
+
+    5.preload [Array]
+    使用preload配置项,可以在普通模块加载前,提前加载并初始化好指定的模块
+    
+    在老浏览器中,提前加载好ES5和json模块
+    seajs.config({
+        preload:[
+            Function.prototype.bind?'':'es5-safe',
+            this.JSON?'':'json'
+        ]
+    })
+    preload中的空字符串会被忽略掉
+    注意:preload中的配置,需要等到use是才加载,比如
+
+    seajs.config({
+        preload:'a'
+    })
+    //在加载b之前,会确保模块a已经加载并执行好
+    seajs.use('./b');
+
+    preload配置不能放在模块文件里面:
+    seajs.config([
+        preload:'a'
+    ]);
+    define(function(require,exports){
+        //此处执行时,不能保证模块a已经加载并执行好
+    })
+
+    6.debug [Boolean]
+    值为true时,加载器不会删除动态插入的script标签.插件也可以根据debug设置,来决策log等信息的输出
+
+    7.base [String]
+    Sea.js在解析顶级标识时,会相对base路径来解析
+    在seajs2.3.0之前,Sea.js会根据sea.js的路径去猜测base路径,一般为路径上含有seajs字符串上的一级路径
+    在2.3.0之后,去掉了这些模糊的猜测.我们推荐始终手动设置一个准确的base路径
+
+    8.charset [String|Function]
+    获取模块文件时,<script>或<link>标签的charset属性.默认是utf-8
+    charset 还可以是一个函数
+    seajs.config({
+        charset:function(url){
+            //xxx目录下的文件用gbk编码加载
+            if(url.indexOf('http://example.com/js/xxx')===0){
+                return 'gbk';
+            }
+            //其他文件用utf-8解码
+            return 'utf-8';
+        }
+    })
+
+    提示
+    多次配置自动合并
+    seajs.config可以多次运行,每次运行时,会对配置项进行合并操作
+    
+    seajs.config({
+        alias:{
+            'jquery':'path/to/jquery.js',
+            'a':'path/to/a.js'
+        },
+        preload:['seajs-text']
+    });
+
+    seajs.config({
+        alias:{
+            'underscore':'path/to/underscore.js',
+            'a':'path/to/biz/a.js'
+        },
+        preload:['seajs-combo']
+    })
+
+    上面两处config运行的结果是
+     alias = {
+        'jquery': 'path/to/jquery.js',
+        'underscore': 'path/to/underscore.js',
+        'a': 'path/to/biz/a.js'
+    };
+    preload = ['seajs-text', 'seajs-combo'];
+
+    即:config会自动合并不存在的项,对存在的项则进行覆盖
+
+    插件配置
+    插件可以给Sea.js添加配置项,请查看具体插件了解相关配置
+
+    配置文件
+    配置可以直接写在html页面上,也可以独立出来成为一个文件
+
+    独立成文件时,一般通过script标签在页面中同步引入
