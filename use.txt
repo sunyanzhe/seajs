@@ -1,0 +1,71 @@
+模块的加载启动
+Sea.js是一个模块加载器,模块加载器需要实现两个基本功能
+    1.实现模块定义规范,这是模块系统的基础
+    2.模块系统的启动与运行
+
+    模块定义规范的实现
+    这就是define require exoorts module的实现.具体实现的细节,可以看Sea.js的源码:seaj/src.可以按照Gruntfile.js中声明的合并顺序阅读,核心是module.js文件
+    define等方法的具体使用,请阅读CMD模块定义规范
+
+    模块系统的启动
+    有了define等模块定义规范的实现,我们可以开发出很多模块.
+    但光有一堆模块不管用,我们还得让他们能跑起来
+
+    首先就是启动问题.比如在Node中,启动很简单 $ node main.js
+    这就是启动
+
+    再举个例子,操作系统的启动:大家都知道的,按一下开机键就好了
+    在Sea.js里,要启动模块系统很简单
+    <script src='path/to/sea.js'></script>
+    <script>
+        seajs.use('./main')
+    </script>
+
+    seajs.use [Function]
+    用来在页面中家在模块
+
+    seajs.use seajs.use(id,callback?)
+    通过use方法,可以在页面中加载任意模块
+
+    //加载模块main 并在加载完成时,执行指定回调
+    seajs.use('./main',function(main){
+        main.init()
+    })
+
+    use方法还可以一次加载多个模块
+    //并发加载模块a和模块b,并在都加载完成时,执行指定回调
+    seajs.use(['./a','./b'],function(a,b){
+        a.init();
+        b.init();
+    })
+
+    callback 参数可选,省略时,表示无需回调
+
+    与DOM ready的关系
+    注意:seajs.use和DOM ready事件没有任何关系,如果某些操作确保在DOM ready后执行,需要使用jquery等类库来保证,比如:
+    seajs.use(['jquery','.main/'],function($,main){
+        $(document).ready(function(){
+            main.init()
+        })
+    })
+
+    sea.js的引入
+    在调用seajs.use之前,需要先引入sea.js文件,推荐直接使用script标签同步引入
+    <script src="path/to/sea.js"></script>
+
+    为了满足某些场景下的性能优化需求,也可以将sea.js的源码内嵌
+    <script>
+    //sea.js的源码
+    </script>
+    注意:代码内嵌时,需要同个seajs.config手动配置base路径
+
+    最佳实践
+    1.seajs.use理论上只用于加载启动,不应该出现define中的模块代码里.在模块代码里需要异步加载其他模块时,推荐使用require.async方法
+    2.引入sea.js时,可以吧sea.js与其他文件打包在一起,可提前合并好,或利用combo服务动态合并.无论哪一种方式,为了让sea.js内部能快速获取到自身路径,推荐手动加上id属性
+
+    <script src='path/to/sea.js' id='seajsnode'></script>
+
+    加上seajsnode值,能够让sea.js直接获取到自身路径,而不需要通过其他机制去自动获取,这对性能和稳定性会有一定的提升,推荐默认都加上
+
+    小结
+    seajs.use 是模块加载器必备的一个接口.在seajs上,还有用于配置的config方法,方便调试的cache等接口,这些会在接下来的文档中详细阐述
