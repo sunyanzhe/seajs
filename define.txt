@@ -1,0 +1,100 @@
+CMD模块定义规范
+    在Sea.js中,所有JavaScript模块都遵循CMD(Common Module Definition) 模块定义规范,该规范明确了模块的基本书写格式和基本交互规则
+    在CMD规范中,一个模块就是一个文件.代码的书写格式如下:
+    define(factory);
+
+    define [Function]
+        defien是一个全局函数,用来定义模块
+
+    denfine define(factory)
+        define接受factory参数,factory可以是一个函数,也可以是一个对象或字符串.
+        factory为对象 字符串时,表示模块的接口就是该对象 字符串.比如可以如下定义一个JSON数据模块
+        
+            define({'foo':'bar'});
+
+        也可以通过字符串定义模板模块
+
+            define('I am a template.My name is {{name}}.');
+
+        factory为函数时,表示模块的构造方法.执行该构造方法,可以得到模块向外提供的接口.factory方法在执行时,默认会传入三个参数:require export 和module
+        
+            define(function(require,exports,module){
+                模块代码
+            })
+
+        define define(id?,deps?,factory)
+        
+        define也可以接受两个以上参数.字符串id表示模块标识,数组deps是模块依赖,比如:
+        
+            define('hello',['jquery'],function(require,exports,module){
+
+            })
+        id和deps参数可以省略.省略时,可以通过构建工具自动生成
+        注意:带id和deps参数的define用法不属于CMD规范,而是属于Modules/Transports规范.
+
+    define.cmd [Object]
+        一个空对象,可用来排定当前页面是否有CMD模块加载器:
+
+        if(typeof define === 'function'&&define.cmd){
+            //有Sea.js等CMD模块加载器存在
+        }
+
+    require [Function]
+    require是factory函数的第一参数
+
+    require require(id)
+    require是一个方法,接受模块标识作为唯一参数,用来获取其他模块提供的接口.
+
+        define(function(require,exports){
+            //获取模块a的接口
+            var a=require('./a');
+            //调用模块a的方法
+            a.doSomething();
+        });
+    
+    
+    require.async require.async(id,callback?)
+    reqire.async方法用来在模块内部异步加载模块,并在加载完成后执行指定回调,callback参数可选.
+        define(function(reqire,exports,module){
+            //异步加载一个模块,加载完成时,执行回调
+            require.async('./b',function(b){
+                b.doSomething();
+            })
+            
+            //异步加载多个模块,在加载完成时,执行回调
+            require.async(['./c','./d'],function(c,d){
+                c.doSomething();
+                d.doSomething();
+            })
+        });
+
+    注意:require是同步往下执行,require.async则是异步回调执行.require.async一般用来加载可延迟异步加载的模块
+
+    requrie.sesolve require.resolve(id)
+    使用模块系统内部的路径解析机制来解析并返回模块路径.该函数不会记载模块,只会返回解析后的绝对路径.
+        define(function(require,exports){
+            console.log(require.resolve('./b'));        =>http://example.com/path/to/b.js
+        })
+    
+    这可以用来获取模块路径,一般用在插件环境或需动态拼接模块路径的场景下
+    
+    exports [Object]
+    exports是一个对象,用来向外提供模块接口
+
+        define(function(require,exports){
+            //对外提供foo属性
+            exports.foo='bar';
+
+            //对完提供doSomething方法
+            exports.doSomething=function(){}
+        });
+    
+    除了给exports对象增加成员,还可以使用return直接向外提供接口
+
+        define(function(require){
+            //通过return直接提供接口
+            return{
+                foo:'bar',
+                doS
+            }
+        })
